@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Fondo con degradado moderno -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#27272a" />
+      <stop offset="100%" stop-color="#09090b" />
+    </linearGradient>
+
+    <!-- Degradado vibrante para la libreta -->
+    <linearGradient id="bookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+
+    <!-- Sombra suave interior -->
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Base redondeada del icono PWA -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#3f3f46" stroke-width="4" opacity="0.4"/>
+
+  <!-- Cuerpo principal de la libreta con sombra -->
+  <rect x="112" y="80" width="304" height="352" rx="24" fill="url(#bookGrad)" filter="url(#dropShadow)"/>
+
+  <!-- Lomo izquierdo oscuro estilo agenda -->
+  <path d="M 112 104 C 112 90.7 122.7 80 136 80 L 168 80 L 168 432 L 136 432 C 122.7 432 112 421.3 112 408 Z" fill="#4c1d95"/>
+
+  <!-- Anillas metálicas del lomo -->
+  <rect x="152" y="128" width="32" height="12" rx="6" fill="#e4e4e7"/>
+  <rect x="152" y="192" width="32" height="12" rx="6" fill="#e4e4e7"/>
+  <rect x="152" y="256" width="32" height="12" rx="6" fill="#e4e4e7"/>
+  <rect x="152" y="320" width="32" height="12" rx="6" fill="#e4e4e7"/>
+  <rect x="152" y="384" width="32" height="12" rx="6" fill="#e4e4e7"/>
+
+  <!-- Líneas de escritura ilustrativas en la portada -->
+  <rect x="224" y="144" width="144" height="16" rx="8" fill="#ffffff" opacity="0.9"/>
+  <rect x="224" y="192" width="120" height="14" rx="7" fill="#ffffff" opacity="0.6"/>
+  <rect x="224" y="236" width="136" height="14" rx="7" fill="#ffffff" opacity="0.6"/>
+
+  <!-- Icono de marca / verificación rápido abajo a la derecha -->
+  <circle cx="336" cy="336" r="32" fill="#10b981"/>
+  <path d="M 324 336 L 332 344 L 348 328" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
