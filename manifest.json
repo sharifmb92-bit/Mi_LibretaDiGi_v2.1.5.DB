@@ -1,0 +1,27 @@
+{
+  "id": "mi-libreta-moderna-pwa",
+  "name": "Mi Libreta Moderna_v 2.1.5",
+  "short_name": "Libreta",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121214",
+  "theme_color": "#18181b",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
