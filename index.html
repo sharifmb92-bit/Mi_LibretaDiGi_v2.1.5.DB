@@ -748,7 +748,7 @@
             <ul>
                 <li><i class="fa-solid fa-note-sticky"></i> <strong>Notas Rápidas:</strong> Apuntes en carrusel horizontal con vista agrupada por meses.</li>
                 <li><i class="fa-solid fa-list-check"></i> <strong>Tareas y Eventos:</strong> Toca la casilla para tachar y desplazar abajo. Toca el texto o el lápiz para abrir el escritorio completo.</li>
-                <li><i class="fa-solid fa-shield-halved"></i> <strong>Copia de Seguridad:</strong> Usa las flechas superiores (<i class="fa-solid fa-arrow-up-from-bracket"></i> / <i class="fa-solid fa-arrow-down-to-bracket"></i>) para guardar o recuperar tus documentos sin perder nada.</li>
+                <li><i class="fa-solid fa-shield-halved"></i> <strong>Protección Doble Automática:</strong> Tus documentos se replican automáticamente en memoria interna y además puedes usar las flechas superiores (<i class="fa-solid fa-arrow-up-from-bracket"></i> / <i class="fa-solid fa-arrow-down-to-bracket"></i>) para respaldos externos.</li>
             </ul>
             <button class="btn-understood" id="closeWelcomeBtn">¡Entendido!</button>
         </div>
@@ -863,6 +863,7 @@
 
         const DB_NAME = 'MiLibretaDB_v2_1';
         const DB_VERSION = 1;
+        const MIRROR_FILE = 'milibreta_mirror_backup.json';
         let db = null;
 
         function initDB() {
@@ -890,14 +891,20 @@
         function saveToStore(storeName, item) {
             return new Promise((resolve) => {
                 const tx = db.transaction(storeName, 'readwrite');
-                tx.objectStore(storeName).put(item).onsuccess = () => resolve();
+                tx.objectStore(storeName).put(item).onsuccess = () => {
+                    syncMirrorBackup();
+                    resolve();
+                };
             });
         }
 
         function deleteFromStore(storeName, id) {
             return new Promise((resolve) => {
                 const tx = db.transaction(storeName, 'readwrite');
-                tx.objectStore(storeName).delete(id).onsuccess = () => resolve();
+                tx.objectStore(storeName).delete(id).onsuccess = () => {
+                    syncMirrorBackup();
+                    resolve();
+                };
             });
         }
 
@@ -910,7 +917,10 @@
         }
 
         function saveSetting(key, value) {
-            return saveToStore('settings', { key, value });
+            return new Promise((resolve) => {
+                const tx = db.transaction('settings', 'readwrite');
+                tx.objectStore('settings').put({ key, value }).onsuccess = () => resolve();
+            });
         }
 
         let notes = [];
@@ -922,14 +932,74 @@
         let activeTargetId = null;
         let currentCalDate = new Date();
 
+        // ========================================================
+        // MOTOR DE DOBLE COPIA AUTOMÁTICA (OPFS MIRROR)
+        // ========================================================
+        async function syncMirrorBackup() {
+            try {
+                if (navigator.storage && navigator.storage.getDirectory) {
+                    const root = await navigator.storage.getDirectory();
+                    const fileHandle = await root.getFileHandle(MIRROR_FILE, { create: true });
+                    const writable = await fileHandle.createWritable();
+                    const payload = JSON.stringify({
+                        notes: notes,
+                        tasks: tasks,
+                        updatedAt: new Date().toISOString()
+                    });
+                    await writable.write(payload);
+                    await writable.close();
+                }
+            } catch (err) {
+                // Silencioso en caso de restricción del navegador
+            }
+        }
+
+        async function attemptAutoRecovery() {
+            try {
+                if (navigator.storage && navigator.storage.getDirectory) {
+                    const root = await navigator.storage.getDirectory();
+                    const fileHandle = await root.getFileHandle(MIRROR_FILE, { create: false });
+                    const file = await fileHandle.getFile();
+                    const text = await file.text();
+                    if (!text) return false;
+
+                    const recovered = JSON.parse(text);
+                    let restoredAny = false;
+
+                    if (Array.isArray(recovered.notes) && recovered.notes.length > 0) {
+                        for (const item of recovered.notes) {
+                            notes.push(item);
+                            const tx = db.transaction('notes', 'readwrite');
+                            tx.objectStore('notes').put(item);
+                        }
+                        restoredAny = true;
+                    }
+
+                    if (Array.isArray(recovered.tasks) && recovered.tasks.length > 0) {
+                        for (const item of recovered.tasks) {
+                            tasks.push(item);
+                            const tx = db.transaction('tasks', 'readwrite');
+                            tx.objectStore('tasks').put(item);
+                        }
+                        restoredAny = true;
+                    }
+
+                    return restoredAny;
+                }
+            } catch (err) {
+                return false;
+            }
+            return false;
+        }
+
         const toastBanner = document.getElementById('toastBanner');
         function showToast(msg) {
             toastBanner.textContent = msg;
             toastBanner.classList.add('show');
-            setTimeout(() => toastBanner.classList.remove('show'), 3000);
+            setTimeout(() => toastBanner.classList.remove('show'), 3500);
         }
 
-        // BOTONES EXPORTAR E IMPORTAR
+        // BOTONES EXPORTAR E IMPORTAR MANUAL
         const exportDataBtn = document.getElementById('exportDataBtn');
         const importDataBtn = document.getElementById('importDataBtn');
         const importFileInput = document.getElementById('importFileInput');
@@ -1427,6 +1497,14 @@
             notes = await getAllFromStore('notes');
             tasks = await getAllFromStore('tasks');
 
+            // SI INDEXEDDB ESTÁ VACÍO, INTENTAR RECUPERACIÓN AUTOMÁTICA DESDE EL ESPEJO OPFS
+            if (notes.length === 0 && tasks.length === 0) {
+                const recovered = await attemptAutoRecovery();
+                if (recovered) {
+                    showToast('¡Documentos recuperados automáticamente!');
+                }
+            }
+
             const welcomeSeen = await getSetting('welcome_seen');
             if (!welcomeSeen) {
                 welcomeModalOverlay.classList.add('active');
@@ -1443,6 +1521,9 @@
                 tasks.push(demoTask);
                 await saveToStore('tasks', demoTask);
             }
+
+            // SINCRONIZAR ESPEJO AL ARRANCAR
+            await syncMirrorBackup();
 
             renderHorizontalNotes();
             renderVerticalTasks();
