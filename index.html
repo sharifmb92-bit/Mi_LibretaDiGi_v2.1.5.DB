@@ -479,6 +479,18 @@
             padding: 16px 20px;
         }
 
+        .editor-title-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            outline: none;
+            width: 100%;
+            padding: 16px 20px;
+        }
+
         .editor-textarea-full {
             flex: 1; background: transparent;
             border: none; resize: none; padding: 20px;
@@ -689,7 +701,7 @@
         <input type="password" name="fake_pass" autocomplete="current-password">
     </form>
 
-    <!-- HEADER CON BOTONES DE RESPALDO -->
+    <!-- HEADER CON BOTONES DE RESPALDO SVG PUROS -->
     <header class="app-header">
         <div class="brand">
             <svg viewBox="0 0 24 24"><path d="M19,2L5,2C3.89,2 3,2.89 3,4L3,20C3,21.1 3.89,22 5,22L19,22C20.1,22 21,21.1 21,20L21,4C21,2.89 20.1,2 19,2ZM19,20L5,20L5,4L7,4L7,10L9.5,8.5L12,10L12,4L19,4L19,20Z"/></svg>
@@ -697,10 +709,18 @@
         </div>
         <div class="header-actions">
             <button class="btn-header-circle" id="exportDataBtn" title="Exportar copia de seguridad">
-                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
             </button>
             <button class="btn-header-circle" id="importDataBtn" title="Importar copia de seguridad">
-                <i class="fa-solid fa-arrow-down-to-bracket"></i>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
             </button>
             <button class="btn-header-circle" id="openTutorialBtn" title="Instrucciones">?</button>
         </div>
@@ -748,7 +768,7 @@
             <ul>
                 <li><i class="fa-solid fa-note-sticky"></i> <strong>Notas Rápidas:</strong> Apuntes en carrusel horizontal con vista agrupada por meses.</li>
                 <li><i class="fa-solid fa-list-check"></i> <strong>Tareas y Eventos:</strong> Toca la casilla para tachar y desplazar abajo. Toca el texto o el lápiz para abrir el escritorio completo.</li>
-                <li><i class="fa-solid fa-shield-halved"></i> <strong>Protección Doble Automática:</strong> Tus documentos se replican automáticamente en memoria interna y además puedes usar las flechas superiores (<i class="fa-solid fa-arrow-up-from-bracket"></i> / <i class="fa-solid fa-arrow-down-to-bracket"></i>) para respaldos externos.</li>
+                <li><i class="fa-solid fa-shield-halved"></i> <strong>Protección Doble Automática:</strong> Tus documentos se replican automáticamente en memoria interna y además puedes usar las flechas superiores (<i class="fa-solid fa-upload"></i> / <i class="fa-solid fa-download"></i>) para respaldos externos.</li>
             </ul>
             <button class="btn-understood" id="closeWelcomeBtn">¡Entendido!</button>
         </div>
