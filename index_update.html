@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Libreta Moderna_v 2.1.5</title>
+    
+    <!-- Configuración PWA -->
+    <meta name="theme-color" content="#18181b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Libreta">
+    
+    <link rel="manifest" href="./manifest.json">
+
+    <!-- Fuentes e Iconos -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-main: #121214;
+            --bg-sidebar: #18181b;
+            --bg-card: #27272a;
+            --border-color: #3f3f46;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent-color: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --paper-bg: #1c1c20;
+            --paper-line: rgba(255, 255, 255, 0.07);
+            --btn-green: #10b981;
+            --btn-green-hover: #059669;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ghost-form { display: none; }
+
+        /* HEADER */
+        .app-header {
+            padding: 14px 20px;
+            background-color: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .brand svg {
+            width: 26px;
+            height: 26px;
+            fill: var(--accent-color);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-help-icon {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        /* LAYOUT PRINCIPAL */
+        .main-layout {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+            gap: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-card);
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+        }
+
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        /* NOTAS HORIZONTALES */
+        .notes-horizontal-wrapper {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 4px 2px 12px 2px;
+            align-items: flex-start;
+        }
+
+        .notes-horizontal-wrapper.hidden { display: none; }
+
+        .note-card-horizontal {
+            min-width: 220px;
+            max-width: 280px;
+            min-height: 150px;
+            height: auto;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: border-color 0.2s;
+        }
+
+        .note-card-horizontal:hover {
+            border-color: var(--accent-color);
+        }
+
+        .note-card-horizontal .title {
+            font-weight: 600;
+            font-size: 1rem;
+            word-break: break-word;
+        }
+
+        .note-card-horizontal .preview {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            word-break: break-word;
+            white-space: pre-wrap;
+            flex: 1;
+        }
+
+        .note-card-see-all {
+            min-width: 130px;
+            min-height: 150px;
+            background: linear-gradient(135deg, var(--bg-card), rgba(139, 92, 246, 0.2));
+            border: 1px dashed var(--accent-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        /* PÍLDORA RECORDATORIO */
+        .reminder-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .reminder-pill i {
+            color: var(--accent-color);
+        }
+
+        .reminder-pill .btn-ready {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* TAREAS VERTICALES */
+        .tasks-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tasks-list-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-card-row {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .task-main-info {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 2px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .task-card-row.completed {
+            opacity: 0.55;
+            background-color: rgba(24, 24, 27, 0.6);
+        }
+
+        .task-card-row.completed .task-title-display {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .task-card-row.completed .task-checkbox {
+            background-color: var(--accent-color);
+        }
+
+        .task-card-row.completed .task-checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .task-content-block {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .task-title-display {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .task-desc-display {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .btn-action-task {
+            background: none; border: none;
+            color: var(--text-secondary);
+            cursor: pointer; font-size: 1rem;
+            padding: 4px 6px;
+        }
+
+        .btn-action-task:hover { color: var(--accent-color); }
+
+        /* MODALES */
+        .reminder-modal, .task-editor-modal, .full-screen-modal, .editor-modal, .welcome-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--bg-main);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .task-editor-modal { z-index: 180; background-color: var(--paper-bg); }
+        .editor-modal { background-color: var(--paper-bg); transform: translateX(100%); z-index: 150; }
+
+        .reminder-modal.active, .task-editor-modal.active, .full-screen-modal.active, .editor-modal.active {
+            transform: translate(0);
+        }
+
+        /* MODAL BIENVENIDA / TUTORIAL */
+        .welcome-modal-overlay {
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transform: translateY(0);
+            display: none;
+        }
+
+        .welcome-modal-overlay.active {
+            display: flex;
+        }
+
+        .welcome-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 420px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .welcome-card h2 {
+            font-size: 1.3rem;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .welcome-card ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .welcome-card ul li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.4;
+        }
+
+        .welcome-card ul li i {
+            color: var(--accent-color);
+            margin-top: 3px;
+        }
+
+        .btn-understood {
+            background-color: var(--btn-green);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+
+        .btn-understood:hover {
+            background-color: var(--btn-green-hover);
+        }
+
+        .reminder-header, .task-editor-header, .modal-header, .editor-header {
+            padding: 14px 20px;
+            background-color: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-close-modal, .btn-back-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-save-primary {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .task-editor-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .task-title-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            outline: none;
+            width: 100%;
+            padding: 16px 20px;
+        }
+
+        .editor-textarea-full {
+            flex: 1; background: transparent;
+            border: none; resize: none; padding: 20px;
+            font-family: 'Inter', sans-serif; font-size: 1.15rem;
+            line-height: 1.8; color: var(--text-primary); outline: none;
+            background-image: linear-gradient(var(--paper-line) 1px, transparent 1px);
+            background-size: 100% 2.07rem;
+        }
+
+        .reminder-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .reminder-info-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .datetime-display {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .time-picker-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: 10px;
+        }
+
+        .time-picker-box label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-selects {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .time-select {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .repeat-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 14px;
+        }
+
+        .repeat-select {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* CALENDARIO */
+        .calendar-container {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .calendar-headers-grid, .calendar-days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+
+        .calendar-day-header {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .calendar-day {
+            padding: 10px 0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.02);
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            background-color: var(--border-color);
+        }
+
+        .calendar-day.selected {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: 700;
+        }
+
+        .month-group { display: flex; flex-direction: column; gap: 12px; }
+        .month-title { font-size: 1.1rem; font-weight: 700; color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 6px; text-transform: capitalize; }
+        .month-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+        .all-note-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+        .all-note-card .title { font-weight: 600; font-size: 1rem; padding-right: 25px; }
+        .all-note-card .content { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; max-height: 80px; overflow: hidden; }
+        .btn-del-note { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-secondary); cursor: pointer; }
+
+        /* SELLO OFICIAL MEDBASHA */
+        .footer-stamp {
+            position: absolute;
+            bottom: 8px; right: 12px;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.25);
+            font-family: monospace;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            text-transform: lowercase;
+        }
+
+        .hexagon-mb {
+            width: 12px;
+            height: 12px;
+            background-color: rgba(139, 92, 246, 0.4);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <form class="ghost-form" aria-hidden="true">
+        <input type="text" name="fake_user" autocomplete="username">
+        <input type="password" name="fake_pass" autocomplete="current-password">
+    </form>
+
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="brand">
+            <svg viewBox="0 0 24 24"><path d="M19,2L5,2C3.89,2 3,2.89 3,4L3,20C3,21.1 3.89,22 5,22L19,22C20.1,22 21,21.1 21,20L21,4C21,2.89 20.1,2 19,2ZM19,20L5,20L5,4L7,4L7,10L9.5,8.5L12,10L12,4L19,4L19,20Z"/></svg>
+            <span>Mi Libreta</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn-help-icon" id="openTutorialBtn" title="Instrucciones">?</button>
+        </div>
+    </header>
+
+    <!-- VISTA PRINCIPAL -->
+    <main class="main-layout">
+        <!-- SECCIÓN NOTAS DESPLEGABLE HORIZONTAL -->
+        <section class="notes-section">
+            <div class="section-header" id="notesToggleHeader">
+                <div class="section-title">
+                    <i class="fa-solid fa-plus-circle" style="color: var(--accent-color);"></i>
+                    <span>Notas</span>
+                </div>
+                <div class="section-title">
+                    <button id="addQuickNoteBtn" class="btn-close-modal" style="padding: 4px 10px; font-size: 0.8rem; background: var(--accent-color); border:none;">+ Nueva</button>
+                    <i class="fa-solid fa-chevron-down toggle-icon" id="notesToggleIcon"></i>
+                </div>
+            </div>
+
+            <div class="notes-horizontal-wrapper" id="notesHorizontalWrapper"></div>
+        </section>
+
+        <!-- SECCIÓN TAREAS VERTICAL -->
+        <section class="tasks-container">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fa-solid fa-square-plus" style="color: var(--btn-green);"></i>
+                    <span>Tareas y Eventos</span>
+                </div>
+                <button id="addNewTaskBtn" class="btn-close-modal" style="padding: 4px 12px; font-size: 0.85rem; background: var(--bg-main);">+ Nueva Tarea</button>
+            </div>
+
+            <div class="tasks-list-vertical" id="tasksListVertical"></div>
+        </section>
+    </main>
+
+    <!-- MODAL DE BIENVENIDA / TUTORIAL -->
+    <div class="welcome-modal-overlay" id="welcomeModalOverlay">
+        <div class="welcome-card">
+            <h2><i class="fa-solid fa-book-open"></i> Guía de Uso</h2>
+            <ul>
+                <li><i class="fa-solid fa-note-sticky"></i> <strong>Notas Rápidas:</strong> Apuntes en carrusel horizontal con vista agrupada por meses.</li>
+                <li><i class="fa-solid fa-list-check"></i> <strong>Tareas y Eventos:</strong> Toca la casilla para tachar y desplazar abajo. Toca el texto o el lápiz para abrir el escritorio completo.</li>
+                <li><i class="fa-regular fa-clock"></i> <strong>Recordatorios:</strong> Configura fecha, hora exacta y repetición desde el calendario flotante.</li>
+            </ul>
+            <button class="btn-understood" id="closeWelcomeBtn">¡Entendido!</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA ESCRITORIO DE TAREAS Y EVENTOS -->
+    <div class="task-editor-modal" id="taskEditorModal">
+        <div class="task-editor-header">
+            <button class="btn-back-modal" id="cancelTaskEditorBtn"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+            <button class="btn-save-primary" id="saveTaskEditorBtn">Guardar Tarea</button>
+        </div>
+        <div class="task-editor-body">
+            <input type="text" id="taskTitleInput" class="task-title-input" placeholder="Título de la tarea o evento..." autocomplete="off">
+            <textarea id="taskFullTextarea" class="editor-textarea-full" placeholder="Detalles o notas sobre este evento..."></textarea>
+        </div>
+    </div>
+
+    <!-- PANTALLA RECORDATORIO Y CALENDARIO -->
+    <div class="reminder-modal" id="reminderModal">
+        <div class="reminder-header">
+            <button class="btn-back-modal" id="cancelReminderBtn"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+            <button class="btn-save-primary" id="saveReminderBtn">Guardar</button>
+        </div>
+
+        <div class="reminder-body">
+            <div class="reminder-info-card">
+                <div class="datetime-display">
+                    <i class="fa-regular fa-calendar-check"></i>
+                    <span id="selectedDateTimeText">25/09/2026 18:22</span>
+                </div>
+
+                <div class="time-picker-box">
+                    <label><i class="fa-regular fa-clock"></i> Hora del evento:</label>
+                    <div class="time-selects">
+                        <select id="hourSelect" class="time-select"></select>
+                        <span style="font-weight:700;">:</span>
+                        <select id="minuteSelect" class="time-select"></select>
+                    </div>
+                </div>
+
+                <div class="repeat-selector">
+                    <span>Repetir</span>
+                    <select class="repeat-select" id="repeatOption">
+                        <option value="Nunca">Nunca</option>
+                        <option value="Todos los días">Todos los días</option>
+                        <option value="Lunes a viernes">Lunes a viernes</option>
+                        <option value="Todas las semanas">Todas las semanas</option>
+                        <option value="Todos los meses">Todos los meses</option>
+                        <option value="Todos los años">Todos los años</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="calendar-container">
+                <div class="calendar-nav">
+                    <button class="btn-close-modal" id="prevMonthBtn">&lt;</button>
+                    <span id="calendarMonthYearTitle">09/2026</span>
+                    <button class="btn-close-modal" id="nextMonthBtn">&gt;</button>
+                </div>
+
+                <div class="calendar-headers-grid">
+                    <div class="calendar-day-header">Lun</div>
+                    <div class="calendar-day-header">Mar</div>
+                    <div class="calendar-day-header">Mié</div>
+                    <div class="calendar-day-header">Jue</div>
+                    <div class="calendar-day-header">Vie</div>
+                    <div class="calendar-day-header">Sáb</div>
+                    <div class="calendar-day-header">Dom</div>
+                </div>
+
+                <div class="calendar-days-grid" id="calendarDaysGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL "VER TODAS LAS NOTAS POR MESES" -->
+    <div class="full-screen-modal" id="allNotesModal">
+        <div class="modal-header">
+            <button class="btn-back-modal" id="closeAllNotesBtn"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+            <span style="font-weight: 700; font-size: 1.1rem;">Todas las Notas Guardadas</span>
+        </div>
+        <div style="padding: 20px; flex:1; overflow-y:auto;" id="allNotesBody"></div>
+    </div>
+
+    <!-- MODAL EDITOR DE NOTA -->
+    <div class="editor-modal" id="editorModal">
+        <div class="editor-header">
+            <button class="btn-back-modal" id="closeEditorBtn"><i class="fa-solid fa-arrow-left"></i> Guardar</button>
+            <button class="btn-close-modal" id="deleteCurrentNoteBtn" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+        <input type="text" id="editorTitleInput" class="editor-title-input" placeholder="Título de la nota..." autocomplete="off">
+        <textarea id="editorTextarea" class="editor-textarea-full" placeholder="Escribe tus notas aquí..."></textarea>
+    </div>
+
+    <!-- SELLO OFICIAL MEDBASHA -->
+    <div class="footer-stamp">
+        <div class="hexagon-mb">MB</div>
+        <span>medbasha</span>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        }
+
+        // SOLICITUD DE ALMACENAMIENTO PERSISTENTE
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist();
+        }
+
+        const DB_NAME = 'MiLibretaDB_v2_1';
+        const DB_VERSION = 1;
+        let db = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('notes')) db.createObjectStore('notes', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('tasks')) db.createObjectStore('tasks', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
+                };
+                request.onsuccess = (e) => { db = e.target.result; resolve(db); };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        function getAllFromStore(storeName) {
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, 'readonly');
+                const req = tx.objectStore(storeName).getAll();
+                req.onsuccess = () => resolve(req.result || []);
+            });
+        }
+
+        function saveToStore(storeName, item) {
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                tx.objectStore(storeName).put(item).onsuccess = () => resolve();
+            });
+        }
+
+        function deleteFromStore(storeName, id) {
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                tx.objectStore(storeName).delete(id).onsuccess = () => resolve();
+            });
+        }
+
+        function getSetting(key) {
+            return new Promise((resolve) => {
+                const tx = db.transaction('settings', 'readonly');
+                const req = tx.objectStore('settings').get(key);
+                req.onsuccess = () => resolve(req.result ? req.result.value : null);
+            });
+        }
+
+        function saveSetting(key, value) {
+            return saveToStore('settings', { key, value });
+        }
+
+        let notes = [];
+        let tasks = [];
+        let activeNoteId = null;
+        let activeTaskId = null;
+
+        let activeTargetType = null;
+        let activeTargetId = null;
+        let currentCalDate = new Date();
+
+        const welcomeModalOverlay = document.getElementById('welcomeModalOverlay');
+        const closeWelcomeBtn = document.getElementById('closeWelcomeBtn');
+        const openTutorialBtn = document.getElementById('openTutorialBtn');
+
+        const notesToggleHeader = document.getElementById('notesToggleHeader');
+        const notesToggleIcon = document.getElementById('notesToggleIcon');
+        const notesHorizontalWrapper = document.getElementById('notesHorizontalWrapper');
+        const tasksListVertical = document.getElementById('tasksListVertical');
+        const addNewTaskBtn = document.getElementById('addNewTaskBtn');
+        const addQuickNoteBtn = document.getElementById('addQuickNoteBtn');
+
+        const taskEditorModal = document.getElementById('taskEditorModal');
+        const taskTitleInput = document.getElementById('taskTitleInput');
+        const taskFullTextarea = document.getElementById('taskFullTextarea');
+        const saveTaskEditorBtn = document.getElementById('saveTaskEditorBtn');
+        const cancelTaskEditorBtn = document.getElementById('cancelTaskEditorBtn');
+
+        const reminderModal = document.getElementById('reminderModal');
+        const saveReminderBtn = document.getElementById('saveReminderBtn');
+        const cancelReminderBtn = document.getElementById('cancelReminderBtn');
+        const selectedDateTimeText = document.getElementById('selectedDateTimeText');
+        const hourSelect = document.getElementById('hourSelect');
+        const minuteSelect = document.getElementById('minuteSelect');
+        const repeatOption = document.getElementById('repeatOption');
+        const calendarMonthYearTitle = document.getElementById('calendarMonthYearTitle');
+        const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+        const prevMonthBtn = document.getElementById('prevMonthBtn');
+        const nextMonthBtn = document.getElementById('nextMonthBtn');
+
+        const allNotesModal = document.getElementById('allNotesModal');
+        const closeAllNotesBtn = document.getElementById('closeAllNotesBtn');
+        const allNotesBody = document.getElementById('allNotesBody');
+
+        const editorModal = document.getElementById('editorModal');
+        const closeEditorBtn = document.getElementById('closeEditorBtn');
+        const deleteCurrentNoteBtn = document.getElementById('deleteCurrentNoteBtn');
+        const editorTitleInput = document.getElementById('editorTitleInput');
+        const editorTextarea = document.getElementById('editorTextarea');
+
+        function populateTimeSelects() {
+            hourSelect.innerHTML = '';
+            minuteSelect.innerHTML = '';
+            for (let h = 0; h < 24; h++) {
+                const val = String(h).padStart(2, '0');
+                hourSelect.innerHTML += `<option value="${val}">${val}</option>`;
+            }
+            for (let m = 0; m < 60; m += 5) {
+                const val = String(m).padStart(2, '0');
+                minuteSelect.innerHTML += `<option value="${val}">${val}</option>`;
+            }
+        }
+
+        populateTimeSelects();
+
+        hourSelect.addEventListener('change', () => {
+            currentCalDate.setHours(parseInt(hourSelect.value));
+            updateCalendarDisplay();
+        });
+
+        minuteSelect.addEventListener('change', () => {
+            currentCalDate.setMinutes(parseInt(minuteSelect.value));
+            updateCalendarDisplay();
+        });
+
+        notesToggleHeader.addEventListener('click', (e) => {
+            if (e.target.id === 'addQuickNoteBtn') return;
+            notesHorizontalWrapper.classList.toggle('hidden');
+            notesToggleIcon.classList.toggle('collapsed');
+        });
+
+        function renderHorizontalNotes() {
+            notesHorizontalWrapper.innerHTML = '';
+            const recentNotes = notes.slice(0, 8);
+
+            recentNotes.forEach(note => {
+                const card = document.createElement('div');
+                card.className = 'note-card-horizontal';
+                const reminderText = note.reminder ? `${note.reminder.date} (${note.reminder.repeat})` : 'Establecer recordatorio';
+
+                card.innerHTML = `
+                    <div class="title">${note.title || 'Sin Título'}</div>
+                    <div class="preview">${note.content || 'Nota vacía...'}</div>
+                    <div class="reminder-pill">
+                        <i class="fa-regular fa-clock"></i>
+                        <span>${reminderText}</span>
+                        <button class="btn-ready">Listo</button>
+                    </div>
+                `;
+
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.reminder-pill')) return;
+                    openNoteEditor(note.id);
+                });
+
+                card.querySelector('.reminder-pill').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openReminderModal('note', note.id);
+                });
+
+                notesHorizontalWrapper.appendChild(card);
+            });
+
+            const seeAllCard = document.createElement('div');
+            seeAllCard.className = 'note-card-see-all';
+            seeAllCard.innerHTML = `
+                <i class="fa-solid fa-folder-open" style="font-size:1.5rem;"></i>
+                <span>Ver Todas</span>
+            `;
+            seeAllCard.addEventListener('click', openAllNotesModal);
+            notesHorizontalWrapper.appendChild(seeAllCard);
+        }
+
+        function renderVerticalTasks() {
+            tasksListVertical.innerHTML = '';
+            const sortedTasks = [...tasks].sort((a, b) => (a.completed === b.completed) ? 0 : a.completed ? 1 : -1);
+
+            sortedTasks.forEach(task => {
+                const row = document.createElement('div');
+                row.className = `task-card-row ${task.completed ? 'completed' : ''}`;
+                const reminderText = task.reminder ? `${task.reminder.date} (${task.reminder.repeat})` : 'Establecer recordatorio';
+
+                row.innerHTML = `
+                    <div class="task-main-info">
+                        <div class="task-checkbox"></div>
+                        <div class="task-content-block">
+                            <div class="task-title-display">${task.title || 'Tarea sin título'}</div>
+                            <div class="task-desc-display">${task.text || 'Sin detalles extra...'}</div>
+                        </div>
+                        <button class="btn-action-task btn-edit-task" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-action-task btn-delete-task" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div class="reminder-pill" style="align-self: flex-start; width: 100%;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <i class="fa-regular fa-clock"></i>
+                            <span>${reminderText}</span>
+                        </div>
+                        <button class="btn-ready">Listo</button>
+                    </div>
+                `;
+
+                row.querySelector('.task-checkbox').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    task.completed = !task.completed;
+                    await saveToStore('tasks', task);
+                    renderVerticalTasks();
+                });
+
+                row.querySelector('.task-content-block').addEventListener('click', () => {
+                    openTaskEditor(task.id);
+                });
+
+                row.querySelector('.btn-edit-task').addEventListener('click', () => {
+                    openTaskEditor(task.id);
+                });
+
+                row.querySelector('.btn-delete-task').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    tasks = tasks.filter(t => t.id !== task.id);
+                    await deleteFromStore('tasks', task.id);
+                    renderVerticalTasks();
+                });
+
+                row.querySelector('.reminder-pill').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openReminderModal('task', task.id);
+                });
+
+                tasksListVertical.appendChild(row);
+            });
+        }
+
+        function openTaskEditor(id) {
+            activeTaskId = id;
+            const task = tasks.find(t => t.id === activeTaskId);
+            if (task) {
+                taskTitleInput.value = task.title || 'Tarea sin título';
+                taskFullTextarea.value = task.text || '';
+                taskEditorModal.classList.add('active');
+
+                if (!task.title || task.title === 'Tarea sin título') {
+                    setTimeout(() => {
+                        taskTitleInput.focus();
+                        taskTitleInput.select();
+                    }, 200);
+                }
+            }
+        }
+
+        cancelTaskEditorBtn.addEventListener('click', () => {
+            taskEditorModal.classList.remove('active');
+        });
+
+        saveTaskEditorBtn.addEventListener('click', async () => {
+            if (!activeTaskId) return;
+            const task = tasks.find(t => t.id === activeTaskId);
+            if (task) {
+                task.title = taskTitleInput.value;
+                task.text = taskFullTextarea.value;
+                await saveToStore('tasks', task);
+                renderVerticalTasks();
+            }
+            taskEditorModal.classList.remove('active');
+        });
+
+        addNewTaskBtn.addEventListener('click', async () => {
+            const newTask = { id: Date.now().toString(), title: 'Tarea sin título', text: '', completed: false, createdAt: new Date().toISOString() };
+            tasks.unshift(newTask);
+            await saveToStore('tasks', newTask);
+            renderVerticalTasks();
+            openTaskEditor(newTask.id);
+        });
+
+        function openReminderModal(type, id) {
+            activeTargetType = type;
+            activeTargetId = id;
+            currentCalDate = new Date();
+
+            const h = String(currentCalDate.getHours()).padStart(2, '0');
+            const roundedM = String(Math.floor(currentCalDate.getMinutes() / 5) * 5).padStart(2, '0');
+
+            hourSelect.value = h;
+            minuteSelect.value = roundedM;
+            currentCalDate.setMinutes(parseInt(roundedM));
+
+            updateCalendarDisplay();
+            reminderModal.classList.add('active');
+        }
+
+        cancelReminderBtn.addEventListener('click', () => {
+            reminderModal.classList.remove('active');
+        });
+
+        function updateCalendarDisplay() {
+            const m = String(currentCalDate.getMonth() + 1).padStart(2, '0');
+            const y = currentCalDate.getFullYear();
+            calendarMonthYearTitle.innerText = `${m}/${y}`;
+
+            const d = String(currentCalDate.getDate()).padStart(2, '0');
+            const hh = String(currentCalDate.getHours()).padStart(2, '0');
+            const mm = String(currentCalDate.getMinutes()).padStart(2, '0');
+
+            selectedDateTimeText.innerText = `${d}/${m}/${y} ${hh}:${mm}`;
+            renderCalendarGrid();
+        }
+
+        function renderCalendarGrid() {
+            calendarDaysGrid.innerHTML = '';
+            const year = currentCalDate.getFullYear();
+            const month = currentCalDate.getMonth();
+
+            const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const empty = document.createElement('div');
+                calendarDaysGrid.appendChild(empty);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = `calendar-day ${day === currentCalDate.getDate() ? 'selected' : ''}`;
+                dayEl.innerText = day;
+
+                dayEl.addEventListener('click', () => {
+                    currentCalDate.setDate(day);
+                    updateCalendarDisplay();
+                });
+
+                calendarDaysGrid.appendChild(dayEl);
+            }
+        }
+
+        prevMonthBtn.addEventListener('click', () => {
+            currentCalDate.setMonth(currentCalDate.getMonth() - 1);
+            updateCalendarDisplay();
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentCalDate.setMonth(currentCalDate.getMonth() + 1);
+            updateCalendarDisplay();
+        });
+
+        saveReminderBtn.addEventListener('click', async () => {
+            const dateStr = selectedDateTimeText.innerText;
+            const repStr = repeatOption.value;
+            const reminderObj = { date: dateStr, repeat: repStr };
+
+            if (activeTargetType === 'note') {
+                const note = notes.find(n => n.id === activeTargetId);
+                if (note) {
+                    note.reminder = reminderObj;
+                    await saveToStore('notes', note);
+                    renderHorizontalNotes();
+                }
+            } else if (activeTargetType === 'task') {
+                const task = tasks.find(t => t.id === activeTargetId);
+                if (task) {
+                    task.reminder = reminderObj;
+                    await saveToStore('tasks', task);
+                    renderVerticalTasks();
+                }
+            }
+
+            reminderModal.classList.remove('active');
+        });
+
+        addQuickNoteBtn.addEventListener('click', async () => {
+            const newNote = { id: Date.now().toString(), title: 'Nota sin título', content: '', updatedAt: new Date().toISOString() };
+            notes.unshift(newNote);
+            await saveToStore('notes', newNote);
+            renderHorizontalNotes();
+            openNoteEditor(newNote.id);
+        });
+
+        function openNoteEditor(id) {
+            activeNoteId = id;
+            const note = notes.find(n => n.id === activeNoteId);
+            if (note) {
+                editorTitleInput.value = note.title;
+                editorTextarea.value = note.content;
+                editorModal.classList.add('active');
+
+                if (note.title === 'Nota sin título') {
+                    setTimeout(() => { editorTitleInput.focus(); editorTitleInput.select(); }, 200);
+                }
+            }
+        }
+
+        closeEditorBtn.addEventListener('click', async () => {
+            if (!activeNoteId) return;
+            const note = notes.find(n => n.id === activeNoteId);
+            if (note) {
+                note.title = editorTitleInput.value;
+                note.content = editorTextarea.value;
+                note.updatedAt = new Date().toISOString();
+                await saveToStore('notes', note);
+                renderHorizontalNotes();
+            }
+            editorModal.classList.remove('active');
+        });
+
+        deleteCurrentNoteBtn.addEventListener('click', async () => {
+            if (confirm("¿Eliminar esta nota?")) {
+                notes = notes.filter(n => n.id !== activeNoteId);
+                await deleteFromStore('notes', activeNoteId);
+                editorModal.classList.remove('active');
+                renderHorizontalNotes();
+            }
+        });
+
+        function openAllNotesModal() {
+            allNotesBody.innerHTML = '';
+            const groups = {};
+
+            notes.forEach(note => {
+                const date = new Date(note.updatedAt);
+                const monthYear = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                if (!groups[monthYear]) groups[monthYear] = [];
+                groups[monthYear].push(note);
+            });
+
+            for (const [month, noteGroup] of Object.entries(groups)) {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'month-group';
+                groupDiv.innerHTML = `<div class="month-title">${month}</div>`;
+
+                const gridDiv = document.createElement('div');
+                gridDiv.className = 'month-grid';
+
+                noteGroup.forEach(note => {
+                    const card = document.createElement('div');
+                    card.className = 'all-note-card';
+                    card.innerHTML = `
+                        <div class="title">${note.title || 'Sin Título'}</div>
+                        <div class="content">${note.content || 'Nota vacía...'}</div>
+                        <button class="btn-del-note"><i class="fa-solid fa-trash-can"></i></button>
+                    `;
+
+                    card.addEventListener('click', (e) => {
+                        if (e.target.closest('.btn-del-note')) return;
+                        allNotesModal.classList.remove('active');
+                        openNoteEditor(note.id);
+                    });
+
+                    card.querySelector('.btn-del-note').addEventListener('click', async () => {
+                        notes = notes.filter(n => n.id !== note.id);
+                        await deleteFromStore('notes', note.id);
+                        openAllNotesModal();
+                        renderHorizontalNotes();
+                    });
+
+                    gridDiv.appendChild(card);
+                });
+
+                groupDiv.appendChild(gridDiv);
+                allNotesBody.appendChild(groupDiv);
+            }
+
+            allNotesModal.classList.add('active');
+        }
+
+        closeAllNotesBtn.addEventListener('click', () => allNotesModal.classList.remove('active'));
+
+        closeWelcomeBtn.addEventListener('click', async () => {
+            welcomeModalOverlay.classList.remove('active');
+            await saveSetting('welcome_seen', true);
+        });
+
+        openTutorialBtn.addEventListener('click', () => {
+            welcomeModalOverlay.classList.add('active');
+        });
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            notes = await getAllFromStore('notes');
+            tasks = await getAllFromStore('tasks');
+
+            const welcomeSeen = await getSetting('welcome_seen');
+            if (!welcomeSeen) {
+                welcomeModalOverlay.classList.add('active');
+            }
+
+            if (notes.length === 0) {
+                const demoNote = { id: '1', title: 'Nota de bienvenida', content: '¡Hola! Usa este espacio para tus apuntes.', updatedAt: new Date().toISOString() };
+                notes.push(demoNote);
+                await saveToStore('notes', demoNote);
+            }
+
+            if (tasks.length === 0) {
+                const demoTask = { id: '1', title: 'Reunión de prueba', text: 'Detalles sobre la reunión...', completed: false, createdAt: new Date().toISOString() };
+                tasks.push(demoTask);
+                await saveToStore('tasks', demoTask);
+            }
+
+            renderHorizontalNotes();
+            renderVerticalTasks();
+        });
+    </script>
+</body>
+</html>
