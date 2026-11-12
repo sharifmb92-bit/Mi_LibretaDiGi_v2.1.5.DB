@@ -79,10 +79,10 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .btn-help-icon {
+        .btn-header-circle {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
@@ -94,7 +94,13 @@
             justify-content: center;
             cursor: pointer;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .btn-header-circle:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
         }
 
         /* LAYOUT PRINCIPAL */
@@ -625,6 +631,29 @@
         .all-note-card .content { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; max-height: 80px; overflow: hidden; }
         .btn-del-note { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-secondary); cursor: pointer; }
 
+        /* AVISO FLOTANTE TOAST */
+        .toast-banner {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--btn-green);
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            z-index: 400;
+            transition: transform 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .toast-banner.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
         /* SELLO OFICIAL MEDBASHA */
         .footer-stamp {
             position: absolute;
@@ -660,16 +689,25 @@
         <input type="password" name="fake_pass" autocomplete="current-password">
     </form>
 
-    <!-- HEADER -->
+    <!-- HEADER CON BOTONES DE RESPALDO -->
     <header class="app-header">
         <div class="brand">
             <svg viewBox="0 0 24 24"><path d="M19,2L5,2C3.89,2 3,2.89 3,4L3,20C3,21.1 3.89,22 5,22L19,22C20.1,22 21,21.1 21,20L21,4C21,2.89 20.1,2 19,2ZM19,20L5,20L5,4L7,4L7,10L9.5,8.5L12,10L12,4L19,4L19,20Z"/></svg>
             <span>Mi Libreta</span>
         </div>
         <div class="header-actions">
-            <button class="btn-help-icon" id="openTutorialBtn" title="Instrucciones">?</button>
+            <button class="btn-header-circle" id="exportDataBtn" title="Exportar copia de seguridad">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+            </button>
+            <button class="btn-header-circle" id="importDataBtn" title="Importar copia de seguridad">
+                <i class="fa-solid fa-arrow-down-to-bracket"></i>
+            </button>
+            <button class="btn-header-circle" id="openTutorialBtn" title="Instrucciones">?</button>
         </div>
     </header>
+
+    <!-- INPUT OCULTO PARA IMPORTAR ARCHIVO -->
+    <input type="file" id="importFileInput" accept=".json" style="display: none;">
 
     <!-- VISTA PRINCIPAL -->
     <main class="main-layout">
@@ -710,7 +748,7 @@
             <ul>
                 <li><i class="fa-solid fa-note-sticky"></i> <strong>Notas Rápidas:</strong> Apuntes en carrusel horizontal con vista agrupada por meses.</li>
                 <li><i class="fa-solid fa-list-check"></i> <strong>Tareas y Eventos:</strong> Toca la casilla para tachar y desplazar abajo. Toca el texto o el lápiz para abrir el escritorio completo.</li>
-                <li><i class="fa-regular fa-clock"></i> <strong>Recordatorios:</strong> Configura fecha, hora exacta y repetición desde el calendario flotante.</li>
+                <li><i class="fa-solid fa-shield-halved"></i> <strong>Copia de Seguridad:</strong> Usa las flechas superiores (<i class="fa-solid fa-arrow-up-from-bracket"></i> / <i class="fa-solid fa-arrow-down-to-bracket"></i>) para guardar o recuperar tus documentos sin perder nada.</li>
             </ul>
             <button class="btn-understood" id="closeWelcomeBtn">¡Entendido!</button>
         </div>
@@ -805,6 +843,9 @@
         <textarea id="editorTextarea" class="editor-textarea-full" placeholder="Escribe tus notas aquí..."></textarea>
     </div>
 
+    <!-- BANNER NOTIFICACIÓN -->
+    <div class="toast-banner" id="toastBanner">Operación realizada</div>
+
     <!-- SELLO OFICIAL MEDBASHA -->
     <div class="footer-stamp">
         <div class="hexagon-mb">MB</div>
@@ -816,7 +857,6 @@
             navigator.serviceWorker.register('./sw.js').catch(() => {});
         }
 
-        // SOLICITUD DE ALMACENAMIENTO PERSISTENTE
         if (navigator.storage && navigator.storage.persist) {
             navigator.storage.persist();
         }
@@ -881,6 +921,90 @@
         let activeTargetType = null;
         let activeTargetId = null;
         let currentCalDate = new Date();
+
+        const toastBanner = document.getElementById('toastBanner');
+        function showToast(msg) {
+            toastBanner.textContent = msg;
+            toastBanner.classList.add('show');
+            setTimeout(() => toastBanner.classList.remove('show'), 3000);
+        }
+
+        // BOTONES EXPORTAR E IMPORTAR
+        const exportDataBtn = document.getElementById('exportDataBtn');
+        const importDataBtn = document.getElementById('importDataBtn');
+        const importFileInput = document.getElementById('importFileInput');
+
+        exportDataBtn.addEventListener('click', () => {
+            const backup = {
+                app: 'MiLibretaModerna',
+                version: '2.1.5',
+                exportedAt: new Date().toISOString(),
+                notes: notes,
+                tasks: tasks
+            };
+
+            const dataStr = JSON.stringify(backup, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const today = new Date().toISOString().split('T')[0];
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Respaldo_MiLibreta_${today}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('Copia de seguridad descargada');
+        });
+
+        importDataBtn.addEventListener('click', () => {
+            importFileInput.click();
+        });
+
+        importFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    let addedCount = 0;
+
+                    if (Array.isArray(imported.notes)) {
+                        for (const item of imported.notes) {
+                            const exists = notes.some(n => n.id === item.id);
+                            if (!exists) {
+                                notes.push(item);
+                                await saveToStore('notes', item);
+                                addedCount++;
+                            }
+                        }
+                    }
+
+                    if (Array.isArray(imported.tasks)) {
+                        for (const item of imported.tasks) {
+                            const exists = tasks.some(t => t.id === item.id);
+                            if (!exists) {
+                                tasks.push(item);
+                                await saveToStore('tasks', item);
+                                addedCount++;
+                            }
+                        }
+                    }
+
+                    renderHorizontalNotes();
+                    renderVerticalTasks();
+                    showToast(`Respaldo restaurado (+${addedCount} elementos)`);
+                } catch (err) {
+                    alert('El archivo seleccionado no es válido.');
+                }
+                importFileInput.value = '';
+            };
+            reader.readAsText(file);
+        });
 
         const welcomeModalOverlay = document.getElementById('welcomeModalOverlay');
         const closeWelcomeBtn = document.getElementById('closeWelcomeBtn');
@@ -1039,9 +1163,11 @@
 
                 row.querySelector('.btn-delete-task').addEventListener('click', async (e) => {
                     e.stopPropagation();
-                    tasks = tasks.filter(t => t.id !== task.id);
-                    await deleteFromStore('tasks', task.id);
-                    renderVerticalTasks();
+                    if (confirm('¿Quieres borrar esta tarea definitivamente?')) {
+                        tasks = tasks.filter(t => t.id !== task.id);
+                        await deleteFromStore('tasks', task.id);
+                        renderVerticalTasks();
+                    }
                 });
 
                 row.querySelector('.reminder-pill').addEventListener('click', (e) => {
@@ -1224,7 +1350,7 @@
         });
 
         deleteCurrentNoteBtn.addEventListener('click', async () => {
-            if (confirm("¿Eliminar esta nota?")) {
+            if (confirm("¿Quieres borrar esta nota definitivamente?")) {
                 notes = notes.filter(n => n.id !== activeNoteId);
                 await deleteFromStore('notes', activeNoteId);
                 editorModal.classList.remove('active');
@@ -1267,10 +1393,12 @@
                     });
 
                     card.querySelector('.btn-del-note').addEventListener('click', async () => {
-                        notes = notes.filter(n => n.id !== note.id);
-                        await deleteFromStore('notes', note.id);
-                        openAllNotesModal();
-                        renderHorizontalNotes();
+                        if (confirm('¿Quieres borrar esta nota definitivamente?')) {
+                            notes = notes.filter(n => n.id !== note.id);
+                            await deleteFromStore('notes', note.id);
+                            openAllNotesModal();
+                            renderHorizontalNotes();
+                        }
                     });
 
                     gridDiv.appendChild(card);
@@ -1304,13 +1432,13 @@
                 welcomeModalOverlay.classList.add('active');
             }
 
-            if (notes.length === 0) {
+            if (notes.length === 0 && !welcomeSeen) {
                 const demoNote = { id: '1', title: 'Nota de bienvenida', content: '¡Hola! Usa este espacio para tus apuntes.', updatedAt: new Date().toISOString() };
                 notes.push(demoNote);
                 await saveToStore('notes', demoNote);
             }
 
-            if (tasks.length === 0) {
+            if (tasks.length === 0 && !welcomeSeen) {
                 const demoTask = { id: '1', title: 'Reunión de prueba', text: 'Detalles sobre la reunión...', completed: false, createdAt: new Date().toISOString() };
                 tasks.push(demoTask);
                 await saveToStore('tasks', demoTask);
